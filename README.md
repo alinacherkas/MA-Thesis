@@ -1,13 +1,13 @@
 # MA-Thesis
 Replication files for *The Effects of Migration on Attitudes towards the European Union: Extent, Dynamics and Causality*, an MA Thesis submitted to Central European University in a.y. 2019/2020 (the link will be provided soon).
 
-## Repository structure
+## Repository Structure
 
 - *Source Data* - a folder with data used to create datasets for the analysis
 - `1.1. Data Preparation Country.ipynb` - a **Python** notebook for reconstructing the main **country-level** dataset
 - `1.2. Data Preparation Multilevel.ipynb` - a **Python** notebook for reconstructing the **multi-level** dataset that was used for robustness check.
 - `2. Data Analysis.Rmd` - an **R** markdown file with the replication codes for the analysis.
-- `2.-Data-Analysis.html` - knitted markdown file. It can be used for exploring the analysis **without using R or Python**.
+- `2.-Data-Analysis.html` - knitted markdown file. Download it to explore the analysis **without using R or Python**.
 - `CEU_Thesis_Data.xlsx` - an Excel file with multiple datasets, including the main **country-level** one. Running `1.1. Data Preparation Country.ipynb` re-creates this file in its entirety.
 
 For viewing the ipython notebooks, I recommend using [nbviewer](https://nbviewer.jupyter.org)
