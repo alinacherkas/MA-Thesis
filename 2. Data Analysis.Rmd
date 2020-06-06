@@ -1,0 +1,449 @@
+---
+title: "Data Analysis"
+author: "Alina Cherkas"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.align='center')
+```
+
+# {.tabset .tabset-fade .tabset-pills}
+
+## Introduction
+
+The notebook can be used to replicate the results of the analysis in *The Effects of Migration on Attitudes towards the European Union: Extent, Dynamics and Causality*, master's thesis submitted to CEU in a.y. 2019/2020. In the analysis, two datasets are used:
+
+1. `DatasetFinal` from `CEU_Thesis_Data.xlsx`, a panel country-level dataset.
+2. `CEU_Thesis_Multilevel.feather`, a cross-section of multi-level data (individual, regional and country levels).
+
+The first dataset **can be replicated** in its whole using `1.1. Data Preparation Country.ipynb`.
+Due to data sharing restrictions, individual-level records used to construct the second dataset are not provided. Thus, the second dataset **cannot be replicated**, but the code used to build it can be found in `1.2. Data Preparation Multilevel.ipynb`. The script also contains a link to the original data source, from which the records can be requested.
+
+The below code can be run step-by-step to replicate the main results of the study. However, the code in sections `Multilevel Data`, `Table 6` and `Table 7` is only for demonstration purposes, since no data are provided for replication as described above.
+
+## Prerequisites
+
+**Note:** you might need to install some of the packages below befor running the code.
+
+```{r Libraries, class.source='fold-show'}
+# Standard Imports
+library(tidyverse)
+library(magrittr)
+
+# Input/Output
+library(readxl)
+library(feather)
+
+# For tables and graphs
+library(stargazer)
+library(ggdag)
+library(dagitty)
+
+# For Panel Models
+library(plm)
+
+# For Clustered Stanrard Errors
+library(clubSandwich)
+
+# For multilevel models
+library(lme4)
+```
+
+
+## Dataset
+
+```{r, Country Data, class.source='fold-show'}
+df.Main <- read_excel("CEU_Thesis_Data.xlsx", sheet = "DatasetFinal")
+df.Main %<>% pdata.frame(index = c("Country", "Year"))
+```
+
+```{r, Full Sample Description}
+df_lambda <- df.Main %>% select(Country, Year, ImmigrantStock, InflowsOECD, InflowsEurostat, ShiftShare,
+                                 Positive, Negative, VeryNegative)
+
+get_mean <- function(x){mean(x,na.rm=TRUE) %>% round(3)}
+
+DT::datatable(df_lambda %>% select(-Year) %>% group_by(Country) %>% summarise_each(get_mean),
+              caption = "Table X. Mean Country-level Values of Main Variables in the Full Dataset (2009-2017)",
+              extensions = c('FixedColumns',"FixedHeader")
+              )
+
+DT::datatable(df_lambda %>% select(-Country) %>% group_by(Year) %>% summarise_each(get_mean),
+              caption = "Table X. Mean Yearly Values of Main Variables in the Full Dataset (2009-2017)",
+              extensions = c('FixedColumns',"FixedHeader")
+              )
+
+DT::datatable(df_lambda %>% filter(Country != "Luxembourg") %>% select(-Country) %>% group_by(Year) %>%
+                summarise_each(get_mean),
+              caption = "Table X. Mean Yearly Values of Main Variables in the Full Dataset without Luxembourg (2009-2017)",
+              extensions = c('FixedColumns',"FixedHeader")
+              )
+```
+
+```{r, IV Sample Description}
+df_lambda <- df.Main %>% filter(IV_Sample == TRUE) %>% 
+  select(Country, Year, ImmigrantStock, InflowsOECD, InflowsEurostat, ShiftShare, Positive, Negative, VeryNegative)
+
+DT::datatable(df_lambda %>% select(-Year) %>% group_by(Country) %>% summarise_each(get_mean),
+              caption = "Table X. Mean Country-level Values of Main Variables in the IV Subset (2009-2017)",
+              extensions = c('FixedColumns',"FixedHeader")
+              )
+
+DT::datatable(df_lambda %>% select(-Country) %>% group_by(Year) %>% summarise_each(get_mean),
+              caption = "Table X. Mean Yearly Values of Main Variables in the IV Subset (2009-2017)",
+              extensions = c('FixedColumns',"FixedHeader")
+              )
+```
+
+## Table 1
+
+Replication can be found in `1.1. Data Preparation Country.ipynb`
+
+## Figure 1
+
+The figure was created using _Tableau Desktop (2020.2)_ based on `DatasetFinal` from `CEU_Thesis_Data.xlsx`. Replication codes are not applicable.
+
+## Figure 2
+
+The figure was created using _Tableau Desktop (2020.2)_ based on `DatasetFinal` from `CEU_Thesis_Data.xlsx`. Replication codes are not applicable.
+
+## Figure 3
+
+```{r, fig.cap='Figure 3. Directed Graph of the Causal Relationship between Immigration and Attitudes'}
+g <- dagify(y_it ~ c_it + w_1it + w_2it + w_3it,
+            y_it ~~ x_it,
+            x_it ~ c_it + z_it)
+
+to_labels <- c(expression(c[it]),
+               expression(w[1][it]),
+               expression(w[2][it]),
+               expression(w[3][it]),
+               expression(x[it]),
+               expression(z[it]),
+               expression(y[it]))
+
+g %>% tidy_dagitty() %>% dag_label(labels = c("y_it" = "Attitudes to the EU",
+                                              "x_it" = "Immigration",
+                                              "c_it" = "Omitted Variable",
+                                              "z_it" = "Past Settlement Instrument",
+                                              "w_1it" = "Unemployment",
+                                              "w_2it" = "GDP Growth",
+                                              "w_3it" = "Pop. Age Composition"
+                                              )) %>% 
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() + 
+  geom_dag_node(color = "#2c3e50", alpha = 0.8) +
+  geom_dag_text(color = "white",
+                parse = TRUE,
+                label = to_labels) +
+  geom_dag_label_repel(aes(label = label),
+                       fill = "#a8e6cf",
+                       alpha = 0.8,
+                       nudge_x = .3,
+                       nudge_y = .3) +
+  theme_void() + theme()
+```
+
+## Figure 4
+
+Replication can be found in `1.1. Data Preparation Country.ipynb`.
+
+## Table 2
+
+```{r, Baseline Unit Root Testing}
+purtest(InflowsOECD ~ 1, data = df.Main, index = "Country", lag = 0, test = "levinlin")
+purtest(InflowsOECD ~ 1, data = df.Main, index = "Country", lag = 1, test = "levinlin")
+purtest(InflowsOECD ~ 1, data = df.Main, index = "Country", lag = 0, test = "ips")
+purtest(InflowsOECD ~ 1, data = df.Main, index = "Country", lag = 1, test = "ips")
+```
+
+```{r, Baseline Pooled Models, class.source='fold-show'}
+# Complete Pooling
+m.OLS1 <- plm(VeryNegative ~ InflowsOECD + ImmigrantStock + UnempRate, data = df.Main, model = "pooling")
+m.OLS2 <- update(m.OLS1, .~. + GlobalExposure + GDP_Growth)
+m.OLS3 <- update(m.OLS2, .~. + EduShare + Pop25_49 +  PopOver65)
+
+# Clustered Standard Errors
+m.OLS1_se <- coef_test(m.OLS1, vcov = "CR1", cluster = "individual")
+m.OLS2_se <- coef_test(m.OLS2, vcov = "CR1", cluster = "individual")
+m.OLS3_se <- coef_test(m.OLS3, vcov = "CR1", cluster = "individual")
+```
+
+```{r, Baseline FE Models, class.source='fold-show'}
+# Fixed-Effects
+m.FE1 <- update(m.OLS3, model = "within", effect = "twoways")
+m.FE2 <- update(m.FE1, .~. - InflowsOECD + lag(InflowsOECD,1))
+m.FE3 <- update(m.FE1, .~. + lag(InflowsOECD,1))
+
+# Clustered Standard Errors
+m.FE1_se <- coef_test(m.FE1, vcov = "CR1", cluster = "individual")
+m.FE2_se <- coef_test(m.FE2, vcov = "CR1", cluster = "individual")
+m.FE3_se <- coef_test(m.FE3, vcov = "CR1", cluster = "individual")
+```
+
+```{r, Baseline Results, results='asis'}
+stargazer(m.OLS1, m.OLS2, m.OLS3, m.FE1, m.FE2, m.FE3, type = "html", style = "apsr",
+          se = list(m.OLS1_se$SE, m.OLS2_se$SE, m.OLS3_se$SE, m.FE1_se$SE, m.FE2_se$SE, m.FE3_se$SE),
+          title = "Table 2. Baseline Results for 22 European Countries (2009-2017)",
+          column.labels =  c("Complete Pooling", "Fixed-Effects"),
+          column.separate = c(3, 3),
+          model.numbers = TRUE,
+          dep.var.labels = "Share of Population with Very Negative Attitude towards the EU",
+          covariate.labels = c("Immigrant Flows", 
+                               "Immigrant Stock", 
+                               "Unemployment Rate",
+                               "Globalisation Exposure", 
+                               "GDP Growth (in %)",
+                               "Education (in %) ",
+                               "Share Aged 25-49",
+                               "Share Aged Over 65", 
+                               "Immigrant Flows (1-year lag)")
+          )
+```
+
+## Table 3
+
+For first-stage results, see Annex A.
+
+```{r, IV Sample, class.source='fold-show'}
+df.IV <- df.Main %>% filter(IV_Sample == TRUE)
+df.IV %<>% pdata.frame(index = c("Country", "Year"))
+```
+
+```{r, IV Unit Root Testing}
+purtest(ShiftShare ~ 1, data = df.IV, index = "Country", lag =0, test = "levinlin")
+purtest(ShiftShare ~ 1, data = df.IV, index = "Country", lag =1, test = "levinlin")
+purtest(ShiftShare ~ 1, data = df.IV, index = "Country", lag = 0, test = "ips")
+purtest(ShiftShare ~ 1, data = df.IV, index = "Country", lag = 1, test = "ips")
+```
+
+```{r, IV Sample Models, class.source='fold-show'}
+# Fixed Effects
+m.FE4 <- plm(VeryNegative ~ InflowsOECD + ImmigrantStock + UnempRate + Pop25_49, data = df.IV, model = "within",
+             effect = "twoways")
+m.FE5 <- update(m.FE4, .~. + GDP_Growth + GlobalExposure)
+m.FE6 <- update(m.FE5, .~. + lag(InflowsOECD,1))
+
+# First Stage
+m.1stage1 <- plm(InflowsOECD ~ ShiftShare + ImmigrantStock + UnempRate,
+                 data = df.IV, model = "within", effect = "twoways")
+m.1stage2 <- update(m.1stage1, .~. + Pop25_49 + GDP_Growth + GlobalExposure)
+
+# IV Fixed Effects
+m.IVFE1 <- update(m.FE4, .~. -InflowsOECD +  fitted(m.1stage1))
+m.IVFE2 <- update(m.FE5, .~. -InflowsOECD + fitted(m.1stage2))
+m.IVFE3 <- update(m.IVFE2, .~. + lag(fitted(m.1stage2),1))
+
+# Clustered Standard Errors
+m.FE4_SE <- coef_test(m.FE4, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.FE5_SE <- coef_test(m.FE5, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.FE6_SE <- coef_test(m.FE6, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE1_SE <- coef_test(m.IVFE1, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE2_SE <- coef_test(m.IVFE2, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE3_SE <- coef_test(m.IVFE3, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+```
+
+```{r, IV Sample Results, results='asis'}
+stargazer(m.FE4, m.FE5, m.FE6, m.IVFE1, m.IVFE2, m.IVFE3, type = "html", style = "apsr",
+          se = list(m.FE4_SE$SE, m.FE5_SE$SE, m.FE6_SE$SE, m.IVFE1_SE$SE, m.IVFE2_SE$SE, m.IVFE3_SE$SE),
+          title = "Table 3. Main Results for a Subset of 7 European Countries (2009-2017)",
+          column.labels =  c("Fixed-Effects", "IV Fixed-Effects"),
+          column.separate = c(3, 3),
+          model.numbers = TRUE,
+          dep.var.labels = "Share of Population with Very Negative Attitude towards the EU",
+          covariate.labels = c("Immigrant Flows",
+                               "Immigrant Stock",
+                               "Unemployment Rate",
+                               "Share Aged 25-49",
+                               "GDP Growth (in %)",
+                               "Globalisation Exposure",
+                               "Immigrant Flows (1-year lag)",
+                               "Immigrant Flows (IV)",
+                               "Immigrant Flows (IV)",
+                               "Immigrant Flows (IV, 1-year lag)")
+          )
+```
+
+## Table 4
+
+For first-stage results, see Annex A.
+
+```{r, First Robustness Check, class.source='fold-show'}
+# Fixed Effects
+m.FE7 <- update(m.FE4, .~. - InflowsOECD + InflowsEurostat)
+m.FE8 <- update(m.FE7, .~. + GDP_Growth + GlobalExposure)
+m.FE9 <- update(m.FE8, .~. + lag(InflowsEurostat,1))
+
+# First Stage
+m.1stage3 <- update(m.1stage1, InflowsEurostat~. )
+m.1stage4 <- update(m.1stage2, InflowsEurostat~. )
+
+# IV Fixed Effects
+m.IVFE4 <- update(m.FE7, .~. -InflowsEurostat +  fitted(m.1stage3))
+m.IVFE5 <- update(m.FE8, .~. -InflowsEurostat + fitted(m.1stage4))
+m.IVFE6 <- update(m.IVFE5, .~. -InflowsEurostat + lag(fitted(m.1stage4),1))
+
+# Clustered Standard Errors
+m.FE7_SE <- coef_test(m.FE7, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.FE8_SE <- coef_test(m.FE8, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.FE9_SE <- coef_test(m.FE9, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE4_SE <- coef_test(m.IVFE1, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE5_SE <- coef_test(m.IVFE2, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE6_SE <- coef_test(m.IVFE3, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+```
+
+```{r, First Robustness Check Results, results='asis'}
+stargazer(m.FE7, m.FE8, m.FE9, m.IVFE4, m.IVFE5, m.IVFE6, type = "html", style = "apsr",
+          se = list(m.FE7_SE$SE, m.FE8_SE$SE, m.FE9_SE$SE, m.IVFE4_SE$SE, m.IVFE5_SE$SE, m.IVFE6_SE$SE),
+          title = "Table 4. First Robustness Check of Main Results",
+          column.labels =  c("Fixed-Effects", "IV Fixed-Effects"),
+          column.separate = c(3, 3),
+          model.numbers = TRUE,
+          dep.var.labels = "Share of Population with Very Negative Attitude towards the EU",
+          covariate.labels = c("Immigrant Stock",
+                               "Unemployment Rate",
+                               "Share Aged 25-49",
+                               "Immigrant Flows (Eurostat)",
+                               "GDP Growth (in %)",
+                               "Globalisation Exposure",
+                               "Immigrant Flows (1-year lag)",
+                               "Immigrant Flows (Eurostat, IV)",
+                               "Immigrant Flows (Eurostat, IV)",
+                               "Immigrant Flows (Eurostat, IV, 1-year lag)")
+          )
+```
+
+## Table 5
+
+For first-stage results, see Annex A.
+
+```{r, Second Robustness Check, class.source='fold-show'}
+m.FE4 <- update(m.FE4, Negative~.)
+m.FE5 <- update(m.FE4, Negative~.)
+m.FE6 <- update(m.FE6, Negative~.)
+
+m.IVFE1 <- update(m.IVFE1, Negative~.)
+m.IVFE2 <- update(m.IVFE2, Negative~.)
+m.IVFE3 <- update(m.IVFE3, Negative~.)
+
+# Clustered Standard Errors
+m.FE4_SE <- coef_test(m.FE4, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.FE5_SE <- coef_test(m.FE5, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.FE6_SE <- coef_test(m.FE6, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE1_SE <- coef_test(m.IVFE1, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE2_SE <- coef_test(m.IVFE2, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+m.IVFE3_SE <- coef_test(m.IVFE3, vcov = "CR1", cluster = "individual", test = "Satterthwaite")
+```
+
+```{r, Second Robustness Check Results, results='asis'}
+stargazer(m.FE4, m.FE5, m.FE6, m.IVFE1, m.IVFE2, m.IVFE3, type = "html", style = "apsr",
+          se = list(m.FE4_SE$SE, m.FE5_SE$SE, m.FE6_SE$SE, m.IVFE1_SE$SE, m.IVFE2_SE$SE, m.IVFE3_SE$SE),
+          title = "Table 5. Second Robustness Check of Main Results)",
+          column.labels =  c("Fixed-Effects", "IV Fixed-Effects"),
+          column.separate = c(3, 3),
+          model.numbers = TRUE,
+          dep.var.labels = "Share of Population with Fairly or Very Negative Attitude towards the EU",
+          covariate.labels = c("Immigrant Flows (OECD)",
+                               "Immigrant Stock",
+                               "Unemployment Rate",
+                               "Share Aged 25-49",
+                               "GDP Growth (in %)",
+                               "Globalisation Exposure",
+                               "Immigrant Flows (1-year lag)",
+                               "Immigrant Flows (IV)",
+                               "Immigrant Flows (IV)",
+                               "Immigrant Flows (IV, 1-year lag)")
+          )
+```
+
+## Multilevel Data
+
+```{r, Multilevel Data, class.source='fold-show'}
+df_multilevel <- read_feather('CEU_Thesis_Multilevel.feather')
+df_multilevel %<>% mutate(Age = scale(Age))
+df_multilevel %<>% drop_na()
+summary(df_multilevel)
+```
+
+## Table 6
+
+```{r, class.source='fold-show'}
+m0 <- lm(Attitude ~ Gender + Age + Residence + VoiceCounts + LifeSatisfaction, data = df_multilevel)
+m1 <- lm(Attitude ~ Gender + Age + Residence + VoiceCounts + LifeSatisfaction + factor(ISO) - 1, data = df_multilevel)
+m2 <- lm(Attitude ~ Gender + Age + Residence + VoiceCounts + LifeSatisfaction + factor(NUTS) - 1,
+         data = df_multilevel)
+```
+
+```{r, OLS Results, results='asis'}
+stargazer(m0, m1, m2, type = "html", style = "apsr",
+          title = "Table 6. Pooled Cross-sectional Model for a Subset of European Countries (2015)",
+          column.labels =  c("Complete Pooling", "No Pooling"),
+          column.separate = c(1,2), keep = 1:6,
+          covariate.labels = c("Gender (Female = 1)", "Age (Scaled)", "Residence (Large City = 1)", 
+                               "Voice Counts (Binary)", "Life Satisfaction (Binary)"),
+          dep.var.labels = "Attitude Towards the EU (5-point scale)",
+          add.lines = list(c("Country-fixed Effects", "No", "Yes", "No"),
+                           c("NUTS-fixed Effects", "No", "No", "Yes")))
+```
+
+## Table 7
+
+For variance components, see outputs below.
+
+```{r, Multilevel Models, class.source='fold-show'}
+ml0 <- lmer(Attitude ~ 1 + (1|NUTS)+ (1|ISO), data = df_multilevel)
+ml1 <- update(ml0, .~. + Gender + Age + Residence + VoiceCounts + LifeSatisfaction)
+ml2 <- update(ml1, .~. + StockTotal + InflowsOECD)
+ml3 <- update(ml2, .~. + NativeEdu + NativeUnempl)
+ml4 <- update(ml2, .~. - (1|ISO) + (1 + Gender + Age|ISO))
+```
+
+```{r, Results Multilevel, results='asis'}
+stargazer(ml0, ml1, ml2, ml3, ml4, type = "html", style = "apsr",
+          title = "Table 7. Multilevel Cross-sectional Model for a Subset of European Countries (2015)",
+          column.labels =  c("Null Model", "Level 1", "Nested Model"),
+          column.separate = c(1, 1, 3),
+          covariate.labels = c("Gender (Female = 1)", "Age (Scaled)", "Residence (Large City = 1)", 
+                               "Voice Counts (Binary)", "Life Satisfaction (Binary)",
+                               "Immigant Stock (NUTS)", "Immigant Flow (Country)",
+                               "Highly Educated (NUTS)", "Unemployment (NUTS)"),
+          dep.var.labels = "Attitude Towards the EU (5-point scale)",
+          add.lines = list(c("Varying Intercepts", "Yes", "Yes", "Yes", "Yes", "Yes"),
+                           c("Varying Slopes", "No", "No", "No", "No", "Yes")))
+```
+
+```{r, Variance Components}
+summary(ml0)
+summary(ml1)
+summary(ml2)
+summary(ml3)
+summary(ml4)
+
+anova(ml1, ml2, ml3, ml4)
+```
+
+## Annex A
+
+```{r, Annex A, results='asis'}
+stargazer(m.1stage1, m.1stage2, m.1stage3, m.1stage4, type = "html", style = "apsr",
+          title = "Annex A. First-Stage IV Results for a Subset of 7 European Countries (2009-2017)",
+          dep.var.labels = c("Immigrant Flows (OECD)", "Immigrant Flows (Eurostat)"),
+          covariate.labels = c("Shift Share Instrument",
+                               "Immigrant Stock",
+                               "Unemployment Rate",
+                               "Share Aged 25-49",
+                               "GDP Growth (in %)",
+                               "Globalisation Exposure")
+          )
+```
+
+## Session Info
+
+```{r}
+pander::pander(sessionInfo(), compact = FALSE)
+```
