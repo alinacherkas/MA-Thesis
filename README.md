@@ -3,7 +3,7 @@ Replication files for *The Effects of Migration on Attitudes towards the Europea
 
 ## Repository structure
 
-- [Source Data](./Source Data) - a folder with data used to create datasets for the analysis
+- *Source Data* - a folder with data used to create datasets for the analysis
 - `1.1. Data Preparation Country.ipynb` - a **Python** notebook for reconstructing the main **country-level** dataset
 - `1.2. Data Preparation Multilevel.ipynb` - a **Python** notebook for reconstructing the **multi-level** dataset that was used for robustness check.
 - `2. Data Analysis.Rmd` - an **R** markdown file with the replication codes for the analysis.
