@@ -1,5 +1,5 @@
 # MA-Thesis
-Replication files for *The Effects of Migration on Attitudes towards the European Union: Extent, Dynamics and Causality*, an MA Thesis submitted to Central European University in a.y. 2019/2020 (the link will be provided soon).
+Replication files for *The Effects of Migration on Attitudes towards the European Union: Extent, Dynamics and Causality*, an MA Thesis submitted to Central European University in a.y. 2019/2020. The thesis is available online via CEU Library at the [following link](https://sierra.ceu.edu/record=b1427828).
 
 ## Repository Structure
 
