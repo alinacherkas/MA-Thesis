@@ -15,6 +15,18 @@ For viewing the ipython notebooks, I recommend using [nbviewer](https://nbviewer
 - Click to view [1.1. Data Preparation Country.ipynb](https://nbviewer.jupyter.org/github/alinacherkas/MA-Thesis/blob/master/1.1.%20Data%20Preparation%20Country.ipynb)
 - Click to view [1.2. Data Preparation Multilevel.ipynb](https://nbviewer.jupyter.org/github/alinacherkas/MA-Thesis/blob/master/1.2.%20Data%20Preparation%20Multilevel.ipynb)
 
+## Replication
+
+To replicate the R environment needed to run `Data Analysis.Rmd`:
+
+1. Open `MA-Thesis.Rproj`.
+2. Go to (R) Console.
+3. Run `renv::restore()`. This will install all the required versions of R packages. These versions were tested in early 2023.
+4. Run the notebook.
+
+Note that individual-level data from `CEU_Thesis_Multilevel.feather` is not provided due to data sharing restrictions but may be created by following the instuctions in the ipython notebooks in this repository.
+There may be tiny differences in the number you get but these should not exceed a rounding error.
+
 ## Abstract
 
 Looking at the relationship between immigration and attitudes towards the EU, the study employs a wide range of techniques to provide a causal estimate of the direction and magnitude of the effect. Utilising shift-share instrument in panel models, the analysis consistently demonstrates that the increase in immigration flows leads to a growth in the share of people with negative attitudes towards the EU. The causal estimate shows a sizable effect of 0.3 percentage points increase in the share of people with very negative attitudes for 0.1 p.p. growth in immigrant flow. The validity of the results in ensured through a set of robustness checks which include alternative specification of the dependent and main independent variable as well as using multi-level models with more precise controls of local conditions. The study provides a robust causal estimate to support McLaren’s (2002) argument that foreigners create public misperception of the EU which gives a rise to the anti-EU sentiments. The estimated effect size reminds of the heightened sensitivity of the migration issue and the need for a coordinated efforts of EU member-states so as to prevent the spread of the anti-immigrant and anti-EU agendas.

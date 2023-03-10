@@ -211,7 +211,7 @@ stargazer(m.OLS1, m.OLS2, m.OLS3, m.FE1, m.FE2, m.FE3, type = "html", style = "a
 For first-stage results, see Annex A.
 
 ```{r, IV Sample, class.source='fold-show'}
-df.IV <- df.Main %>% filter(IV_Sample == TRUE)
+df.IV <- df.Main %>% filter(IV_Sample == TRUE) %>% as_tibble()
 df.IV %<>% pdata.frame(index = c("Country", "Year"))
 ```
 
